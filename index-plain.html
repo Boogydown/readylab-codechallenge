@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript">
+        var READYLAB_URL = "http://readylab-qa.generationready.com/api/v1/ReadyTest/";
+
+        /**
+         * Retrieve message from the ReadyLab API
+         * @param id {string} id of record to retrieve
+         * @param printFunc {function} method to call with string of the message
+         * @param payload {*} any passthrough data to carry to the success method
+         */
+        function getMessage( id, printFunc, payload ) {
+            $.ajax({
+                url: READYLAB_URL + id,
+                dataType: "jsonp",
+                success: function(e){
+                    printFunc(e[id], payload);
+                },
+                error: function(e){
+                    alert('What are you, in preschool??  GET Error!');
+                }
+            });
+        }
+
+        /**
+         * Loop from 0 to 100, catching only multiples of 3 and 5, and concatenating all results from the api calls
+         * @param printFunc {function} method to call with string value of final result
+         */
+        function loopGet( printFunc ) {
+            var myStr = '';
+
+            function concatStr(str, final) {
+                myStr += str;
+                if ( final )
+                    printFunc( myStr );
+            }
+
+            for ( var i = 3; i < 101; i++ ) {
+                if ( !(i%3) || !(i%5) ) {
+                    getMessage(i, concatStr, i==100 );
+                }
+            }
+        }
+
+        /**
+         * POST data to the ReadyLab API.
+         * @param answer {string} answer
+         * @param name {string} name
+         * @param email {string} email
+         * @param printFunc {function} method which to call with POST response
+         */
+        function postInfo( id, answer, name, email, printFunc ) {
+            $.ajax({
+                url: READYLAB_URL + id + "/edit",
+                type:"POST",
+                dataType: "jsonp",
+                data:{
+                    "answer": answer,
+                    "name": name,
+                    "email": email
+                },
+                success: function(e){
+                    printFunc(e.message);
+                },
+                error: function(e){
+                    alert('Your dad was the mailman... POST error');
+                }
+            });
+        }
+
+        function printToDOM( msg, selector ){
+            $(selector || "#output").html( "<p>" + msg + "</p>" );
+        }
+
+        function onGet() {
+            getMessage( $("#getId").val(), printToDOM );
+        }
+
+        function onLoop() {
+            loopGet( printToDOM );
+        }
+
+        function onPost() {
+            postInfo(
+                    $("#postId").val(),
+                    $("#answer").val(),
+                    $("#name").val(),
+                    $("#email").val(),
+                    printToDOM
+            );
+        }
+
+    </script>
+</head>
+<body>
+<h1>ReadyLab Code Challenge</h1>
+<h3>Dimitri Hammond</h3>
+
+<!--<form onsubmit="function(){return false;}" action="">-->
+<p><button id="loopBtn" onclick="onLoop()">Run loop</button></p>
+<p>
+    id: <input id="getId"></input><br/>
+    <button id="getBtn" onclick="onGet()">GET message</button>
+</p>
+<p>
+    id: <input id="postId" value="1381193665"></input><br/>
+    answer: <input id="answer"></input><br/>
+    name: <input id="name"></input><br/>
+    email: <input id="email"></input><br/>
+    <button id="postBtn" onclick="onPost()">POST edit</button>
+</p>
+<!--</form>-->
+
+<p id="output"></p>
+</body>
+</html>

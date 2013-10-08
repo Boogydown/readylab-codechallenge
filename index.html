@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ready Lab API Code Challenge">
+    <meta name="author" content="Dimitri HAmmond">
+
+    <title>Ready Lab API Code Challenge</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/sticky-footer-navbar.css" rel="stylesheet">
+
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript">
+        var READYLAB_URL = "http://readylab-qa.generationready.com/api/v1/ReadyTest/";
+
+        /**
+         * Retrieve message from the ReadyLab API
+         * @param id {string} id of record to retrieve
+         * @param printFunc {function} method to call with string of the message
+         * @param payload {*} any passthrough data to carry to the success method
+         */
+        function getMessage( id, printFunc, payload ) {
+            $.ajax({
+                url: READYLAB_URL + id,
+                dataType: "jsonp",
+                success: function(e){
+                    printFunc(e[id], payload);
+                },
+                error: function(e){
+                    alert('What are you, in preschool??  GET Error!');
+                }
+            });
+        }
+
+        /**
+         * Loop from 0 to 100, catching only multiples of 3 and 5, and concatenating all results from the api calls
+         * @param printFunc {function} method to call with string value of final result
+         */
+        function loopGet( printFunc ) {
+            var myStr = '';
+
+            function concatStr(str, final) {
+                myStr += str;
+                if ( final )
+                    printFunc( myStr );
+            }
+
+            for ( var i = 3; i < 101; i++ ) {
+                if ( !(i%3) || !(i%5) ) {
+                    getMessage(i, concatStr, i==100 );
+                }
+            }
+        }
+
+        /**
+         * POST data to the ReadyLab API.
+         * @param answer {string} answer
+         * @param name {string} name
+         * @param email {string} email
+         * @param printFunc {function} method which to call with POST response
+         */
+        function postInfo( id, answer, name, email, printFunc ) {
+            $.ajax({
+                url: READYLAB_URL + id + "/edit",
+                type:"POST",
+                dataType: "jsonp",
+                data:{
+                    "answer": answer,
+                    "name": name,
+                    "email": email
+                },
+                success: function(e){
+                    printFunc(e.message);
+                },
+                error: function(e){
+                    alert('Your dad was the mailman... POST error');
+                }
+            });
+        }
+
+        function printToDOM( msg, selector ){
+            $(selector || "#output").html( "<p>" + msg + "</p>" );
+        }
+
+        function onGet() {
+            getMessage( $("#getId").val(), function(msg) { printToDOM( msg,"#get_output" ); } );
+        }
+
+        function onLoop() {
+            printToDOM( "(Running.....)", "#loop_output" );
+            loopGet( function(msg) { printToDOM( msg, "#loop_output" ); } );
+        }
+
+        function onPost() {
+            postInfo(
+                    $("#postId").val(),
+                    $("#answer").val(),
+                    $("#name").val(),
+                    $("#email").val(),
+                    function(msg) { printToDOM( msg, "#post_output" ); }
+            );
+        }
+
+    </script>
+
+</head>
+
+<body>
+
+<!-- Wrap all page content here -->
+<div id="wrap">
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">ReadyLab</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#home_content" data-toggle="tab">Home</a></li>
+                    <li><a href="#get_content" data-toggle="tab">GET</a></li>
+                    <li><a href="#post_content" data-toggle="tab">POST</a></li>
+                    <li><a href="#loop_content" data-toggle="tab">3&5 Loop</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+
+    <!-- Begin page content -->
+    <div class="container">
+
+        <div class="tab-content">
+            <div class="active tab-pane" id="home_content">
+                <div class="page-header">
+                    <h2>ReadyLab API Sandbox</h2>
+                </div>
+                <p class="lead">Welcome to Dimitri Hammond's snippets for GenerationReady's code challenge!</p>
+                <p> These pages will allow you to play a little with the ReadyLab Code Challenge API.  You have the options
+                    to GET data for the given id, POST some info to an id, or run a Loop that calls on every 3rd and 5th
+                    numbers until 100</p>
+                <p> Please make your selection using the nav bar, above</p>
+                <img src="images/gen_ready_logo.jpeg"/>
+            </div>
+
+            <div class="tab-pane" id="get_content">
+                <div class="page-header">
+                    <h2>ReadyLab GET</h2>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="getId">ID of record to GET :</label>
+                        <input class="form-control" id="getId" placeholder="Enter ID">
+                    </div>
+                    <div class="form-group">
+                        <button id="getBtn" type="button" class="btn btn-primary" onclick="onGet()">GET message</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="well">
+                        <h4>Output:</h4>
+                        <br/>
+                        <div id="get_output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane" id="post_content">
+                <div class="page-header">
+                    <h2>ReadyLab POST</h2>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="getId">ID of record to POST :</label>
+                        <input class="form-control" id="postId" value="1381193665" placeholder="Enter ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="answer">Answer value:</label>
+                        <input class="form-control" id="answer">
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Your name:</label>
+                        <input class="form-control" id="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Your email address:</label>
+                        <input class="form-control" id="email">
+                    </div>
+                    <div class="form-group">
+                        <button id="postBtn" type="button" class="btn btn-primary" onclick="onPost()">POST edit</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="well">
+                        <h4>Output:</h4>
+                        <br/>
+                        <div id="post_output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane" id="loop_content">
+                <div class="page-header">
+                    <h2>ReadyLab 3&5 Looper</h2>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <p>Click the button to run a loop from 0 to 100 and call GET on any value
+                            that is divisible by 3 OR 5.</p>
+                        <button id="loopBtn" type="button" class="btn btn-primary" onclick="onLoop()">Run Loop!</button>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="well">
+                        <h4>Output:</h4>
+                        <br/>
+                        <div id="loop_output"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="footer">
+    <div class="container">
+        <p class="text-muted credit">By <a href="mailto:dimitri.hammond@gmail.com">Dimitri Hammond</a>.  See resume <a href="dimitri/Dimitri_Hammond_Resume_2013.htm">here</a>.</p>
+    </div>
+</div>
+
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="js/jquery-1.10.2.min.js"></script>
+<script src="js/bootstrap.js"></script>
+
+
+</body></html>
